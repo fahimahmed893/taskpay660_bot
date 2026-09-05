@@ -1,90 +1,506 @@
-?
-Loading...
-@...
-Available balance
-0.00USDT
-↓ Withdraw
-Today's earning0.00
-Tasks done0
-Referrals0
-Tasks for you
-See all
-Loading tasks...
-Have a task to run? Post it and reach real workers today
-Post a task
-Tasks
-All
-Social
-App install
-Survey
-Sign up
-Loading tasks...
-Wallet
-Available balance
-0.00USDT
-Pending0.00
-Withdrawn total0.00
-Min. withdraw2.00
-Request a withdrawal
-Payout method
-USDT (TRC20)
-bKash
-Nagad
-Amount
-0.00
- USDT
-Minimum withdrawal is 2.00 USDT. Requests are reviewed manually.
-Request withdrawal
-Recent activity
-Loading...
-Referral
-5%
-Earn a commission on every task your
-referred friends complete — for life
-Your invite link
-Loading...
-Copy
-Share to Telegram
-0Referrals
-0.00Earned (USDT)
-5%Commission
-Your referrals
-Loading...
-Post a task
-Task type
-Social media
-App install
-Survey
-Sign up
-Task details
-Title
-e.g. Subscribe to my YouTube channel
-Instructions for workers
-Explain exactly what the worker needs to do...
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaskLedger</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="device">
 
-Link
-https://...
-Proof required from worker
+  <!-- ===================== HOME ===================== -->
+  <div class="view active" id="view-home">
+    <div class="topbar">
+      <div class="who">
+        <div class="avatar" id="home-avatar">?</div>
+        <div class="who-text">
+          <div class="who-name" id="home-name">Loading...</div>
+          <div class="who-handle" id="home-handle">@...</div>
+        </div>
+      </div>
+    </div>
+    <div class="ledger">
+      <div class="ledger-label">Available balance</div>
+      <div class="ledger-amount-row">
+        <div><span class="ledger-amount" id="home-balance">0.00</span><span class="ledger-unit">USDT</span></div>
+        <button class="withdraw-btn" onclick="showView('wallet')">↓ Withdraw</button>
+      </div>
+      <div class="ledger-meta">
+        <div>Today's earning<b id="home-today">0.00</b></div>
+        <div>Tasks done<b id="home-tasksdone">0</b></div>
+        <div>Referrals<b id="home-referrals">0</b></div>
+      </div>
+    </div>
 
-Screenshot link
-Budget
-Your pay per task ($)
-0.05
-Number of workers
-100
-Worker will receive$0.038
-Total to deposit$5.00
-Workers get a fixed share of your rate; the rest covers platform costs. Amount is deducted from your balance instantly.
-Deposit & publish task
-Your posted tasks
-Loading...
- Home
-  Tasks
-  Wallet
-  Referral
-  Post
-Submit proof
-Your proof (link / text)
-Paste your screenshot link or details here...
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Tasks for you</div>
+        <button class="section-link" onclick="showView('tasks')">See all</button>
+      </div>
+      <div class="task-list" id="home-task-list">
+        <div class="empty-note">Loading tasks...</div>
+      </div>
+    </div>
 
-Submit
+    <div class="post-banner">
+      <div class="post-banner-text">
+        <b>Have a task to run?</b>
+        <span>Post it and reach real workers today</span>
+      </div>
+      <button class="post-btn" style="width:auto;" onclick="showView('post')">Post a task</button>
+    </div>
+  </div>
+
+  <!-- ===================== TASKS ===================== -->
+  <div class="view" id="view-tasks">
+    <div class="topbar">
+      <div class="topbar-title">Tasks</div>
+    </div>
+    <div class="section" style="padding-top:0;">
+      <div class="chips" id="tasks-chips">
+        <div class="chip active" data-cat="all">All</div>
+        <div class="chip" data-cat="social">Social</div>
+        <div class="chip" data-cat="app">App install</div>
+        <div class="chip" data-cat="survey">Survey</div>
+        <div class="chip" data-cat="sign_up">Sign up</div>
+      </div>
+      <div class="task-list" id="tasks-full-list">
+        <div class="empty-note">Loading tasks...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== WALLET ===================== -->
+  <div class="view" id="view-wallet">
+    <div class="topbar">
+      <div class="topbar-title">Wallet</div>
+    </div>
+    <div class="ledger">
+      <div class="ledger-label">Available balance</div>
+      <div><span class="ledger-amount" id="wallet-balance">0.00</span><span class="ledger-unit">USDT</span></div>
+      <div class="ledger-meta">
+        <div>Pending<b id="wallet-pending">0.00</b></div>
+        <div>Withdrawn total<b id="wallet-withdrawn">0.00</b></div>
+        <div>Min. withdraw<b id="wallet-min">2.00</b></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="card">
+        <div class="card-title">Request a withdrawal</div>
+        <div class="field-label">Payout method</div>
+        <div class="method-row" id="withdraw-methods">
+          <div class="method active" data-m="USDT">USDT (TRC20)</div>
+          <div class="method" data-m="bKash">bKash</div>
+          <div class="method" data-m="Nagad">Nagad</div>
+        </div>
+        <div class="field-label">Amount</div>
+        <div class="amount-input">
+          <input type="number" step="0.01" id="withdraw-amount" placeholder="0.00">
+          <span>USDT</span>
+        </div>
+        <div class="field-hint">Minimum withdrawal is 2.00 USDT. Requests are reviewed manually.</div>
+        <button class="submit-btn" onclick="submitWithdraw()">Request withdrawal</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title" style="margin-bottom:12px;">Recent activity</div>
+      <div class="hist-list" id="wallet-history">
+        <div class="empty-note">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== REFERRAL ===================== -->
+  <div class="view" id="view-referral">
+    <div class="topbar">
+      <div class="topbar-title">Referral</div>
+    </div>
+    <div class="hero">
+      <div class="hero-rate" id="ref-percent">5%</div>
+      <div class="hero-sub">Earn a commission on every task your<br>referred friends complete — for life</div>
+    </div>
+    <div class="section">
+      <div class="card">
+        <div class="card-title">Your invite link</div>
+        <div class="link-row">
+          <div class="link-text" id="ref-link">Loading...</div>
+          <button class="copy-btn" onclick="copyRefLink()">Copy</button>
+        </div>
+        <button class="share-btn" style="width:100%;" onclick="shareRefLink()">Share to Telegram</button>
+        <div class="stat-row">
+          <div class="stat-box"><b id="ref-count">0</b><span>Referrals</span></div>
+          <div class="stat-box"><b id="ref-earned">0.00</b><span>Earned (USDT)</span></div>
+          <div class="stat-box"><b id="ref-percent2">5%</b><span>Commission</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title" style="margin-bottom:12px;">Your referrals</div>
+      <div class="ref-list" id="ref-list">
+        <div class="empty-note">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== POST A TASK ===================== -->
+  <div class="view" id="view-post">
+    <div class="topbar">
+      <div class="topbar-title">Post a task</div>
+    </div>
+    <div class="section">
+      <div class="card">
+        <div class="card-title">Task type</div>
+        <div class="type-grid" id="post-type">
+          <div class="type-opt active" data-cat="social">Social media</div>
+          <div class="type-opt" data-cat="app">App install</div>
+          <div class="type-opt" data-cat="survey">Survey</div>
+          <div class="type-opt" data-cat="sign_up">Sign up</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Task details</div>
+        <div class="field"><div class="field-label">Title</div><input type="text" id="post-title" placeholder="e.g. Subscribe to my YouTube channel"></div>
+        <div class="field"><div class="field-label">Instructions for workers</div><textarea id="post-instructions" placeholder="Explain exactly what the worker needs to do..."></textarea></div>
+        <div class="field"><div class="field-label">Link</div><input type="text" id="post-link" placeholder="https://..."></div>
+        <div class="field">
+          <div class="field-label">Proof required from worker</div>
+          <select id="post-prooftype">
+            <option>Screenshot link</option>
+            <option>Username / profile link</option>
+            <option>Text description</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Budget</div>
+        <div class="two-col">
+          <div class="field"><div class="field-label">Your pay per task ($)</div><input type="number" step="0.001" id="post-rate" value="0.05" oninput="updateRateCard()"></div>
+          <div class="field"><div class="field-label">Number of workers</div><input type="number" id="post-slots" value="100" oninput="updateRateCard()"></div>
+        </div>
+        <div class="rate-card">
+          <div><span>Worker will receive</span><b id="post-worker-rate">$0.038</b></div>
+          <div><span>Total to deposit</span><b id="post-total-cost">$5.00</b></div>
+        </div>
+        <div class="rate-note">Workers get a fixed share of your rate; the rest covers platform costs. Amount is deducted from your balance instantly.</div>
+      </div>
+      <button class="submit-btn" onclick="submitPostTask()">Deposit & publish task</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title" style="margin:22px 0 12px;">Your posted tasks</div>
+      <div id="my-tasks-list"><div class="empty-note">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="bottom-nav">
+    <button class="nav-item active" data-view="home" onclick="showView('home')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      Home<div class="nav-dot"></div>
+    </button>
+    <button class="nav-item" data-view="tasks" onclick="showView('tasks')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Tasks<div class="nav-dot"></div>
+    </button>
+    <button class="nav-item" data-view="wallet" onclick="showView('wallet')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      Wallet<div class="nav-dot"></div>
+    </button>
+    <button class="nav-item" data-view="referral" onclick="showView('referral')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Referral<div class="nav-dot"></div>
+    </button>
+    <button class="nav-item" data-view="post" onclick="showView('post')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      Post<div class="nav-dot"></div>
+    </button>
+  </div>
+
+  <!-- Submit proof modal -->
+  <div class="modal-overlay" id="proof-modal">
+    <div class="modal-box">
+      <div class="modal-title" id="proof-modal-title">Submit proof</div>
+      <div class="field"><div class="field-label">Your proof (link / text)</div><textarea id="proof-text" placeholder="Paste your screenshot link or details here..."></textarea></div>
+      <button class="submit-btn" onclick="confirmSubmitProof()">Submit</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+let CURRENT_USER = null;
+let CURRENT_TASK_FOR_PROOF = null;
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(()=>{ t.style.display='none'; }, 2500);
+}
+
+async function apiFetch(url, opts={}){
+  opts.headers = opts.headers || {};
+  opts.headers['X-Init-Data'] = tg.initData || '';
+  if(opts.body){ opts.headers['Content-Type'] = 'application/json'; }
+  const res = await fetch(url, opts);
+  const data = await res.json();
+  if(!res.ok){ throw new Error(data.error || 'Something went wrong'); }
+  return data;
+}
+
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===name));
+  if(name==='home') loadHome();
+  if(name==='tasks') loadTasks('all');
+  if(name==='wallet') loadWallet();
+  if(name==='referral') loadReferral();
+  if(name==='post') loadMyTasks();
+}
+
+function categoryIconClass(cat){
+  return {social:'social', app:'app', survey:'survey', sign_up:'sign_up'}[cat] || 'social';
+}
+
+function taskRowHtml(t){
+  const pct = t.total_slots ? Math.round((t.filled_slots/t.total_slots)*100) : 0;
+  const full = t.filled_slots >= t.total_slots;
+  let statusLabel = full ? 'Fully claimed' : `${t.filled_slots} of ${t.total_slots} done`;
+  let extra = '';
+  if(t.already_submitted === 'pending') extra = '<span class="pill pending">Pending review</span>';
+  if(t.already_submitted === 'approved') extra = '<span class="pill approved">Paid</span>';
+  if(t.already_submitted === 'rejected') extra = '<span class="pill rejected">Rejected</span>';
+  return `
+    <div class="task-row" onclick="openProofModal(${t.id}, '${(t.title||'').replace(/'/g,"\\'")}', ${!!t.already_submitted}, ${full})">
+      <div class="task-icon ${categoryIconClass(t.category)}">●</div>
+      <div class="task-body">
+        <div class="task-title">${t.title} ${extra}</div>
+        <div class="task-progress-track"><div class="task-progress-fill" style="width:${pct}%"></div></div>
+        <div class="task-progress-label">${statusLabel}</div>
+      </div>
+      <div class="task-pay">
+        <div class="task-pay-amount">$${Number(t.worker_rate).toFixed(3)}</div>
+        <div class="task-pay-do">per task</div>
+      </div>
+    </div>`;
+}
+
+function openProofModal(taskId, title, already, full){
+  if(already){ toast('আপনি ইতিমধ্যে এই টাস্কে প্রুফ জমা দিয়েছেন'); return; }
+  if(full){ toast('এই টাস্কটি এখন পূর্ণ'); return; }
+  CURRENT_TASK_FOR_PROOF = taskId;
+  document.getElementById('proof-modal-title').textContent = title;
+  document.getElementById('proof-text').value = '';
+  document.getElementById('proof-modal').classList.add('active');
+}
+
+document.getElementById('proof-modal').addEventListener('click', (e)=>{
+  if(e.target.id === 'proof-modal') document.getElementById('proof-modal').classList.remove('active');
+});
+
+async function confirmSubmitProof(){
+  const proof = document.getElementById('proof-text').value.trim();
+  if(!proof){ toast('প্রুফ লিখুন'); return; }
+  try{
+    await apiFetch(`/api/tasks/${CURRENT_TASK_FOR_PROOF}/submit`, {method:'POST', body: JSON.stringify({proof_text: proof})});
+    document.getElementById('proof-modal').classList.remove('active');
+    toast('প্রুফ জমা হয়েছে, এমপ্লয়ার রিভিউ করবেন ✅');
+    loadHome(); loadTasks('all');
+  }catch(e){ toast(e.message); }
+}
+
+async function loadHome(){
+  try{
+    const d = await apiFetch('/api/dashboard');
+    const u = d.user;
+    document.getElementById('home-avatar').textContent = (u.first_name||'?').slice(0,2).toUpperCase();
+    document.getElementById('home-name').textContent = u.first_name || 'User';
+    document.getElementById('home-handle').textContent = u.username ? '@'+u.username : '';
+    document.getElementById('home-balance').textContent = Number(u.balance).toFixed(2);
+    document.getElementById('home-today').textContent = Number(d.today_earning).toFixed(2);
+    document.getElementById('home-tasksdone').textContent = d.tasks_done;
+    document.getElementById('home-referrals').textContent = d.referrals;
+    const list = document.getElementById('home-task-list');
+    list.innerHTML = d.tasks.length ? d.tasks.map(taskRowHtml).join('') : '<div class="empty-note">এখনো কোনো টাস্ক নেই</div>';
+  }catch(e){ console.error(e); }
+}
+
+let currentTaskCategory = 'all';
+async function loadTasks(cat){
+  currentTaskCategory = cat;
+  document.querySelectorAll('#tasks-chips .chip').forEach(c=>c.classList.toggle('active', c.dataset.cat===cat));
+  try{
+    const list = await apiFetch('/api/tasks?category='+cat);
+    const el = document.getElementById('tasks-full-list');
+    el.innerHTML = list.length ? list.map(taskRowHtml).join('') : '<div class="empty-note">এই ক্যাটাগরিতে কোনো টাস্ক নেই</div>';
+  }catch(e){ console.error(e); }
+}
+document.getElementById('tasks-chips').addEventListener('click', (e)=>{
+  const chip = e.target.closest('.chip');
+  if(chip) loadTasks(chip.dataset.cat);
+});
+
+async function loadWallet(){
+  try{
+    const d = await apiFetch('/api/wallet');
+    document.getElementById('wallet-balance').textContent = Number(d.balance).toFixed(2);
+    document.getElementById('wallet-pending').textContent = Number(d.pending).toFixed(2);
+    document.getElementById('wallet-withdrawn').textContent = Number(d.withdrawn_total).toFixed(2);
+    document.getElementById('wallet-min').textContent = Number(d.min_withdraw).toFixed(2);
+    const hist = document.getElementById('wallet-history');
+    hist.innerHTML = d.activity.length ? d.activity.map(a=>`
+      <div class="hist-row">
+        <div class="hist-icon ${a.amount<0?'out':'in'}">${a.amount<0?'↓':'↑'}</div>
+        <div class="hist-body"><div class="hist-title">${a.title}</div><div class="hist-date">${(a.date||'').slice(0,10)}</div></div>
+        <div class="hist-right"><div class="hist-amount ${a.amount<0?'out':'in'}">${a.amount<0?'':'+'}${Number(a.amount).toFixed(3)}</div></div>
+      </div>`).join('') : '<div class="empty-note">এখনো কোনো activity নেই</div>';
+  }catch(e){ console.error(e); }
+}
+
+let withdrawMethod = 'USDT';
+document.getElementById('withdraw-methods').addEventListener('click', (e)=>{
+  const m = e.target.closest('.method');
+  if(!m) return;
+  document.querySelectorAll('#withdraw-methods .method').forEach(x=>x.classList.remove('active'));
+  m.classList.add('active');
+  withdrawMethod = m.dataset.m;
+});
+
+async function submitWithdraw(){
+  const amount = parseFloat(document.getElementById('withdraw-amount').value);
+  if(!amount || amount<=0){ toast('সঠিক amount দিন'); return; }
+  try{
+    await apiFetch('/api/withdraw', {method:'POST', body: JSON.stringify({amount, method: withdrawMethod})});
+    toast('উইথড্র রিকোয়েস্ট পাঠানো হয়েছে ✅');
+    document.getElementById('withdraw-amount').value='';
+    loadWallet();
+  }catch(e){ toast(e.message); }
+}
+
+async function loadReferral(){
+  try{
+    const d = await apiFetch('/api/referral');
+    document.getElementById('ref-link').textContent = d.link || 'বট এখনো চালু হয়নি';
+    document.getElementById('ref-count').textContent = d.count;
+    document.getElementById('ref-earned').textContent = Number(d.total_earned).toFixed(3);
+    document.getElementById('ref-percent').textContent = d.percent+'%';
+    document.getElementById('ref-percent2').textContent = d.percent+'%';
+    const list = document.getElementById('ref-list');
+    list.innerHTML = d.referrals.length ? d.referrals.map(r=>`
+      <div class="ref-row">
+        <div class="ref-avatar">${(r.first_name||'?').slice(0,1).toUpperCase()}</div>
+        <div class="ref-body" style="flex:1;">
+          <div class="ref-name">${r.username ? '@'+r.username : r.first_name}</div>
+          <div class="ref-date">Joined ${(r.created_at||'').slice(0,10)}</div>
+        </div>
+        <div class="ref-earn">+${Number(r.earned).toFixed(3)}</div>
+      </div>`).join('') : '<div class="empty-note">এখনো কেউ আপনার লিংকে জয়েন করেনি</div>';
+    window.__refLink = d.link;
+  }catch(e){ console.error(e); }
+}
+
+function copyRefLink(){
+  if(!window.__refLink) return;
+  navigator.clipboard.writeText(window.__refLink).then(()=>toast('লিংক কপি হয়েছে ✅'));
+}
+function shareRefLink(){
+  if(!window.__refLink) return;
+  tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(window.__refLink)}`);
+}
+
+let postCategory = 'social';
+document.getElementById('post-type').addEventListener('click', (e)=>{
+  const opt = e.target.closest('.type-opt');
+  if(!opt) return;
+  document.querySelectorAll('#post-type .type-opt').forEach(x=>x.classList.remove('active'));
+  opt.classList.add('active');
+  postCategory = opt.dataset.cat;
+});
+
+function updateRateCard(){
+  const rate = parseFloat(document.getElementById('post-rate').value) || 0;
+  const slots = parseInt(document.getElementById('post-slots').value) || 0;
+  const workerRate = rate * 0.75;
+  document.getElementById('post-worker-rate').textContent = '$'+workerRate.toFixed(3);
+  document.getElementById('post-total-cost').textContent = '$'+(rate*slots).toFixed(2);
+}
+
+async function submitPostTask(){
+  const payload = {
+    category: postCategory,
+    title: document.getElementById('post-title').value.trim(),
+    instructions: document.getElementById('post-instructions').value.trim(),
+    link: document.getElementById('post-link').value.trim(),
+    proof_type: document.getElementById('post-prooftype').value,
+    employer_rate: parseFloat(document.getElementById('post-rate').value),
+    total_slots: parseInt(document.getElementById('post-slots').value),
+  };
+  if(!payload.title){ toast('টাইটেল দিন'); return; }
+  try{
+    await apiFetch('/api/post-task', {method:'POST', body: JSON.stringify(payload)});
+    toast('টাস্ক পাবলিশ হয়েছে ✅');
+    document.getElementById('post-title').value='';
+    document.getElementById('post-instructions').value='';
+    document.getElementById('post-link').value='';
+    loadMyTasks(); loadHome();
+  }catch(e){ toast(e.message); }
+}
+
+async function loadMyTasks(){
+  try{
+    const list = await apiFetch('/api/my-tasks');
+    const el = document.getElementById('my-tasks-list');
+    if(!list.length){ el.innerHTML = '<div class="empty-note">আপনি এখনো কোনো টাস্ক পোস্ট করেননি</div>'; return; }
+    el.innerHTML = list.map(t=>{
+      const subsHtml = t.pending_submissions.length ? t.pending_submissions.map(s=>`
+        <div class="hist-row">
+          <div class="hist-body">
+            <div class="hist-title">${s.username ? '@'+s.username : s.first_name}</div>
+            <div class="hist-date">${s.proof_text}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="copy-btn" style="background:var(--pine);" onclick="reviewSubmission(${s.id},'approve')">✓</button>
+            <button class="copy-btn" style="background:var(--coral);" onclick="reviewSubmission(${s.id},'reject')">✕</button>
+          </div>
+        </div>`).join('') : '<div class="empty-note">এখনো কোনো প্রুফ জমা পড়েনি</div>';
+      return `<div class="card">
+        <div class="card-title">${t.title} <span style="font-size:12px;color:var(--ink-soft);">(${t.filled_slots}/${t.total_slots})</span></div>
+        ${subsHtml}
+      </div>`;
+    }).join('');
+  }catch(e){ console.error(e); }
+}
+
+async function reviewSubmission(id, action){
+  try{
+    await apiFetch(`/api/submissions/${id}/review`, {method:'POST', body: JSON.stringify({action})});
+    toast(action==='approve' ? 'এপ্রুভ করা হয়েছে ✅' : 'রিজেক্ট করা হয়েছে');
+    loadMyTasks();
+  }catch(e){ toast(e.message); }
+}
+
+async function init(){
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get('ref');
+  try{
+    const u = await apiFetch('/api/init', {method:'POST', body: JSON.stringify({initData: tg.initData, ref})});
+    CURRENT_USER = u;
+    loadHome();
+  }catch(e){
+    toast('লগইন ব্যর্থ — Telegram এর ভেতর থেকে খুলুন');
+  }
+}
+init();
+</script>
+</body>
+</html>
