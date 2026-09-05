@@ -1,0 +1,26 @@
+TaskLedger — Admin
+Total platform revenue (from approved tasks)
+${{ revenue }}
+Database backup
+নিয়মিত (প্রতিদিন/সপ্তাহে একবার) এই বাটনে চেপে ব্যাকআপ ফোনে সেভ করে রাখুন — ডেটা হারিয়ে গেলে এটা দিয়ে ফিরিয়ে আনা যাবে
+
+⬇ Download Backup Now
+Pending withdrawals
+{% if withdrawals|length == 0 %}
+কোনো pending withdrawal নেই
+
+{% endif %} {% for w in withdrawals %}
+{{ w.username or w.first_name }} — ${{ "%.2f"|format(w.amount) }} via {{ w.method }}
+{{ w.created_at }}
+Mark Paid Reject
+{% endfor %}
+Manually credit balance
+bKash/USDT-তে টাকা পাওয়ার পর এখান থেকে ইউজারের ব্যালেন্স যোগ করুন (deposit সিমুলেশন)
+Telegram ID
+Amount (USDT)
+Credit
+Recent users
+{% for u in users %}
+{{ u.username and '@'+u.username or u.first_name }} (ID: {{ u.telegram_id }})
+${{ "%.2f"|format(u.balance) }}
+{% endfor %}
