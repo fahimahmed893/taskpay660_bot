@@ -30,10 +30,10 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 # ========================================================
 # এই জায়গাগুলো আপনার নিজের তথ্য দিয়ে বদলে দিন
 # ========================================================
-BOT_TOKEN = "PASTE_YOUR_BOT_TOKEN_HERE"
-CHANNEL_USERNAME = "@yourchannel"
-ADMIN_TELEGRAM_ID = 123456789          # আপনার নিজের Telegram numeric ID (@userinfobot দিয়ে বের করুন)
-ADMIN_SECRET_PATH = "changeme-secret"  # এডমিন প্যানেলের গোপন অংশ, url এ থাকবে
+BOT_TOKEN = "8996627149:AAH0uejnG9e8_RJDRcTzsNN_9erLGEiqK6c"
+CHANNEL_USERNAME = "@task_pay_660"
+ADMIN_TELEGRAM_ID = 1725125622          # আপনার নিজের Telegram numeric ID (@userinfobot দিয়ে বের করুন)
+ADMIN_SECRET_PATH = "taskpay-admin-panel-fahim660"  # এডমিন প্যানেলের গোপন অংশ, url এ থাকবে
 WEBAPP_URL = "https://example.com"     # Replit Run করার পর যে ওয়েব লিংক পাবেন সেটা এখানে বসাবেন
 # ========================================================
 
