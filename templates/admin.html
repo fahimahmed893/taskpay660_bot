@@ -1,26 +1,99 @@
-TaskLedger — Admin
-Total platform revenue (from approved tasks)
-${{ revenue }}
-Database backup
-নিয়মিত (প্রতিদিন/সপ্তাহে একবার) এই বাটনে চেপে ব্যাকআপ ফোনে সেভ করে রাখুন — ডেটা হারিয়ে গেলে এটা দিয়ে ফিরিয়ে আনা যাবে
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaskLedger — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#EEF2ED;--paper-raised:#FFFFFF;--ink:#16211C;--ink-soft:#4B5A52;--line:#D7DED6;--pine:#2F6F5E;--pine-deep:#1F4A3E;--gold:#C4872E;--coral:#BE4F39;}
+  *{box-sizing:border-box;}
+  body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;margin:0;padding:20px;max-width:720px;margin:0 auto;}
+  h1{font-family:'Fraunces',serif;font-size:24px;}
+  .card{background:var(--paper-raised);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);gap:10px;flex-wrap:wrap;}
+  .row:last-child{border-bottom:none;}
+  .btn{border:none;border-radius:8px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer;text-decoration:none;color:#fff;display:inline-block;}
+  .btn.pay{background:var(--pine);}
+  .btn.reject{background:var(--coral);}
+  .revenue{font-family:'Space Mono',monospace;font-size:22px;color:var(--pine-deep);font-weight:700;}
+  input{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;}
+  .btn.credit{background:var(--gold);color:#231604;border:none;font-size:13px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;}
+  small{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+  <h1>TaskLedger — Admin</h1>
 
-⬇ Download Backup Now
-Pending withdrawals
-{% if withdrawals|length == 0 %}
-কোনো pending withdrawal নেই
+  <div class="card">
+    <small>Total platform revenue (from approved tasks)</small>
+    <div class="revenue">${{ revenue }}</div>
+  </div>
 
-{% endif %} {% for w in withdrawals %}
-{{ w.username or w.first_name }} — ${{ "%.2f"|format(w.amount) }} via {{ w.method }}
-{{ w.created_at }}
-Mark Paid Reject
-{% endfor %}
-Manually credit balance
-bKash/USDT-তে টাকা পাওয়ার পর এখান থেকে ইউজারের ব্যালেন্স যোগ করুন (deposit সিমুলেশন)
-Telegram ID
-Amount (USDT)
-Credit
-Recent users
-{% for u in users %}
-{{ u.username and '@'+u.username or u.first_name }} (ID: {{ u.telegram_id }})
-${{ "%.2f"|format(u.balance) }}
-{% endfor %}
+  <div class="card">
+    <h3>Database backup</h3>
+    <small>নিয়মিত (প্রতিদিন/সপ্তাহে একবার) এই বাটনে চেপে ব্যাকআপ ফোনে সেভ করে রাখুন — ডেটা হারিয়ে গেলে এটা দিয়ে ফিরিয়ে আনা যাবে</small>
+    <br><br>
+    <a class="btn pay" href="/admin/{{ secret }}/backup">⬇ Download Backup Now</a>
+  </div>
+
+  <div class="card">
+    <h3>Pending deposits</h3>
+    {% if deposits|length == 0 %}
+      <p><small>কোনো pending deposit নেই</small></p>
+    {% endif %}
+    {% for d in deposits %}
+      <div class="row">
+        <div>
+          <b>{{ d.username or d.first_name }}</b> — ${{ "%.2f"|format(d.amount) }} via {{ d.method }}
+          <br><small>Ref: {{ d.transaction_ref }}</small>
+          <br><small>{{ d.created_at }}</small>
+        </div>
+        <div>
+          <a class="btn pay" href="/admin/{{ secret }}/deposit/{{ d.id }}/approve">Approve</a>
+          <a class="btn reject" href="/admin/{{ secret }}/deposit/{{ d.id }}/reject">Reject</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h3>Pending withdrawals</h3>
+    {% if withdrawals|length == 0 %}
+      <p><small>কোনো pending withdrawal নেই</small></p>
+    {% endif %}
+    {% for w in withdrawals %}
+      <div class="row">
+        <div>
+          <b>{{ w.username or w.first_name }}</b> — ${{ "%.2f"|format(w.amount) }} via {{ w.method }}
+          <br><small>{{ w.created_at }}</small>
+        </div>
+        <div>
+          <a class="btn pay" href="/admin/{{ secret }}/withdraw/{{ w.id }}/paid">Mark Paid</a>
+          <a class="btn reject" href="/admin/{{ secret }}/withdraw/{{ w.id }}/reject">Reject</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h3>Manually credit balance</h3>
+    <small>bKash/USDT-তে টাকা পাওয়ার পর এখান থেকে ইউজারের ব্যালেন্স যোগ করুন (deposit সিমুলেশন)</small>
+    <form method="POST" action="/admin/{{ secret }}/credit" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+      <input type="number" name="telegram_id" placeholder="Telegram ID" required>
+      <input type="number" step="0.01" name="amount" placeholder="Amount (USDT)" required>
+      <button class="btn credit" type="submit">Credit</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Recent users</h3>
+    {% for u in users %}
+      <div class="row">
+        <div>{{ u.username and '@'+u.username or u.first_name }} <small>(ID: {{ u.telegram_id }})</small></div>
+        <div><b>${{ "%.2f"|format(u.balance) }}</b></div>
+      </div>
+    {% endfor %}
+  </div>
+</body>
+</html>
