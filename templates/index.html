@@ -90,6 +90,27 @@
     </div>
     <div class="section">
       <div class="card">
+        <div class="card-title">Deposit / Add balance</div>
+        <div class="field-hint">নিচের যেকোনো একটা ঠিকানায় টাকা পাঠান, তারপর Amount ও Transaction ID দিয়ে জমা দিন — এডমিন যাচাই করে ব্যালেন্স যোগ করে দিবেন।</div>
+        <div id="deposit-info" style="margin:12px 0;"><div class="empty-note">Loading...</div></div>
+        <div class="field-label">Method</div>
+        <div class="method-row" id="deposit-methods">
+          <div class="method active" data-m="USDT">USDT (TRC20)</div>
+          <div class="method" data-m="bKash">bKash</div>
+          <div class="method" data-m="Nagad">Nagad</div>
+        </div>
+        <div class="field-label">Amount</div>
+        <div class="amount-input">
+          <input type="number" step="0.01" id="deposit-amount" placeholder="0.00">
+          <span>USDT</span>
+        </div>
+        <div class="field"><div class="field-label">Transaction ID / প্রুফ লিংক</div><input type="text" id="deposit-ref" placeholder="TXN ID বা স্ক্রিনশট লিংক"></div>
+        <button class="submit-btn" onclick="submitDeposit()">Submit deposit</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="card">
         <div class="card-title">Request a withdrawal</div>
         <div class="field-label">Payout method</div>
         <div class="method-row" id="withdraw-methods">
@@ -263,7 +284,7 @@ function showView(name){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===name));
   if(name==='home') loadHome();
   if(name==='tasks') loadTasks('all');
-  if(name==='wallet') loadWallet();
+  if(name==='wallet'){ loadWallet(); loadDepositInfo(); }
   if(name==='referral') loadReferral();
   if(name==='post') loadMyTasks();
 }
@@ -375,6 +396,39 @@ document.getElementById('withdraw-methods').addEventListener('click', (e)=>{
   m.classList.add('active');
   withdrawMethod = m.dataset.m;
 });
+
+let depositMethod = 'USDT';
+document.getElementById('deposit-methods').addEventListener('click', (e)=>{
+  const m = e.target.closest('.method');
+  if(!m) return;
+  document.querySelectorAll('#deposit-methods .method').forEach(x=>x.classList.remove('active'));
+  m.classList.add('active');
+  depositMethod = m.dataset.m;
+});
+
+async function loadDepositInfo(){
+  try{
+    const d = await apiFetch('/api/deposit-info');
+    document.getElementById('deposit-info').innerHTML = `
+      <div class="link-row"><div class="link-text">USDT (TRC20): ${d.usdt}</div></div>
+      <div class="link-row"><div class="link-text">bKash: ${d.bkash}</div></div>
+      <div class="link-row"><div class="link-text">Nagad: ${d.nagad}</div></div>
+    `;
+  }catch(e){ console.error(e); }
+}
+
+async function submitDeposit(){
+  const amount = parseFloat(document.getElementById('deposit-amount').value);
+  const ref = document.getElementById('deposit-ref').value.trim();
+  if(!amount || amount<=0){ toast('সঠিক amount দিন'); return; }
+  if(!ref){ toast('Transaction ID / প্রুফ লিংক দিন'); return; }
+  try{
+    await apiFetch('/api/deposit', {method:'POST', body: JSON.stringify({amount, method: depositMethod, transaction_ref: ref})});
+    toast('ডিপোজিট রিকোয়েস্ট পাঠানো হয়েছে ✅ এডমিন যাচাই করবেন');
+    document.getElementById('deposit-amount').value='';
+    document.getElementById('deposit-ref').value='';
+  }catch(e){ toast(e.message); }
+}
 
 async function submitWithdraw(){
   const amount = parseFloat(document.getElementById('withdraw-amount').value);
