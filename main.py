@@ -34,7 +34,7 @@ BOT_TOKEN = "8996627149:AAH0uejnG9e8_RJDRcTzsNN_9erLGEiqK6c"
 CHANNEL_USERNAME = "@task_pay_660"
 ADMIN_TELEGRAM_ID = 1725125622          # আপনার নিজের Telegram numeric ID (@userinfobot দিয়ে বের করুন)
 ADMIN_SECRET_PATH = "taskpay-admin-panel-fahim660"  # এডমিন প্যানেলের গোপন অংশ, url এ থাকবে
-WEBAPP_URL = "https://example.com"     # Replit Run করার পর যে ওয়েব লিংক পাবেন সেটা এখানে বসাবেন
+WEBAPP_URL = "https://taskpay660-bot.onrender.com"     # Replit Run করার পর যে ওয়েব লিংক পাবেন সেটা এখানে বসাবেন
 # ========================================================
 
 PLATFORM_MARGIN_PERCENT = 25   # employer rate থেকে worker rate কত % কম হবে (আপনি বদলাতে পারেন)
