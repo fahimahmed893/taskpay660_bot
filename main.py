@@ -34,12 +34,17 @@ BOT_TOKEN = "8996627149:AAH0uejnG9e8_RJDRcTzsNN_9erLGEiqK6c"
 CHANNEL_USERNAME = "@task_pay_660"
 ADMIN_TELEGRAM_ID = 1725125622          # আপনার নিজের Telegram numeric ID (@userinfobot দিয়ে বের করুন)
 ADMIN_SECRET_PATH = "taskpay-admin-panel-fahim660"  # এডমিন প্যানেলের গোপন অংশ, url এ থাকবে
-WEBAPP_URL = "https://taskpay660-bot.onrender.com"     # Replit Run করার পর যে ওয়েব লিংক পাবেন সেটা এখানে বসাবেন
+WEBAPP_URL = "https://example.com"     # Replit Run করার পর যে ওয়েব লিংক পাবেন সেটা এখানে বসাবেন
 # ========================================================
 
 PLATFORM_MARGIN_PERCENT = 25   # employer rate থেকে worker rate কত % কম হবে (আপনি বদলাতে পারেন)
 REFERRAL_PERCENT = 5           # রেফারেল কমিশন %
 MIN_WITHDRAW = 2.0             # মিনিমাম উইথড্র (USDT)
+
+# ডিপোজিটের জন্য আপনার পেমেন্ট তথ্য - এগুলো আপনার আসল নাম্বার/এড্রেস দিয়ে বদলান
+RECEIVE_USDT_ADDRESS = "আপনার USDT (TRC20) ওয়ালেট এড্রেস এখানে দিন"
+RECEIVE_BKASH_NUMBER = "আপনার bKash নাম্বার এখানে দিন"
+RECEIVE_NAGAD_NUMBER = "আপনার Nagad নাম্বার এখানে দিন"
 
 DB_PATH = "taskledger.db"
 
@@ -113,6 +118,15 @@ def init_db():
         amount REAL,
         created_at TEXT
     )""")
+    c.execute("""CREATE TABLE IF NOT EXISTS deposits (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        amount REAL,
+        method TEXT,
+        transaction_ref TEXT,
+        status TEXT DEFAULT 'pending',
+        created_at TEXT
+    )""")
     conn.commit()
     conn.close()
 
@@ -169,6 +183,10 @@ def admin_panel():
         "SELECT w.*, u.username, u.first_name FROM withdrawals w JOIN users u ON u.telegram_id=w.user_id "
         "WHERE w.status='pending' ORDER BY w.created_at DESC"
     ).fetchall()
+    deposits = db.execute(
+        "SELECT d.*, u.username, u.first_name FROM deposits d JOIN users u ON u.telegram_id=d.user_id "
+        "WHERE d.status='pending' ORDER BY d.created_at DESC"
+    ).fetchall()
     revenue_row = db.execute(
         "SELECT COALESCE(SUM(t.employer_rate - t.worker_rate),0) as rev FROM submissions s "
         "JOIN tasks t ON t.id=s.task_id WHERE s.status='approved'"
@@ -177,6 +195,7 @@ def admin_panel():
     return render_template(
         "admin.html",
         withdrawals=withdrawals,
+        deposits=deposits,
         revenue=round(revenue_row["rev"], 4),
         users=users,
         secret=ADMIN_SECRET_PATH,
@@ -193,6 +212,20 @@ def admin_withdraw_action(wid, action):
         elif action == "reject":
             db.execute("UPDATE withdrawals SET status='rejected' WHERE id=?", (wid,))
             db.execute("UPDATE users SET balance = balance + ? WHERE telegram_id=?", (w["amount"], w["user_id"]))
+        db.commit()
+    return admin_panel()
+
+
+@app.route(f"/admin/{ADMIN_SECRET_PATH}/deposit/<int:did>/<action>")
+def admin_deposit_action(did, action):
+    db = get_db()
+    d = db.execute("SELECT * FROM deposits WHERE id=?", (did,)).fetchone()
+    if d and d["status"] == "pending":
+        if action == "approve":
+            db.execute("UPDATE deposits SET status='approved' WHERE id=?", (did,))
+            db.execute("UPDATE users SET balance = balance + ? WHERE telegram_id=?", (d["amount"], d["user_id"]))
+        elif action == "reject":
+            db.execute("UPDATE deposits SET status='rejected' WHERE id=?", (did,))
         db.commit()
     return admin_panel()
 
@@ -425,6 +458,43 @@ def api_withdraw():
     db.execute(
         "INSERT INTO withdrawals (user_id, amount, method, status, created_at) VALUES (?,?,?,?,?)",
         (user["telegram_id"], amount, method, "pending", now()),
+    )
+    db.commit()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/deposit-info")
+def api_deposit_info():
+    auth = get_authenticated_user()
+    if not auth:
+        return jsonify({"error": "unauthorized"}), 401
+    return jsonify({
+        "usdt": RECEIVE_USDT_ADDRESS,
+        "bkash": RECEIVE_BKASH_NUMBER,
+        "nagad": RECEIVE_NAGAD_NUMBER,
+    })
+
+
+@app.route("/api/deposit", methods=["POST"])
+def api_deposit_request():
+    auth = get_authenticated_user()
+    if not auth:
+        return jsonify({"error": "unauthorized"}), 401
+    user, _ = auth
+    body = request.get_json(force=True)
+    amount = float(body.get("amount", 0))
+    method = body.get("method", "USDT")
+    transaction_ref = body.get("transaction_ref", "").strip()
+
+    if amount <= 0:
+        return jsonify({"error": "সঠিক amount দিন"}), 400
+    if not transaction_ref:
+        return jsonify({"error": "Transaction ID / প্রুফ লিংক দিন"}), 400
+
+    db = get_db()
+    db.execute(
+        "INSERT INTO deposits (user_id, amount, method, transaction_ref, status, created_at) VALUES (?,?,?,?,?,?)",
+        (user["telegram_id"], amount, method, transaction_ref, "pending", now()),
     )
     db.commit()
     return jsonify({"ok": True})
