@@ -1,1 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaskLedger — User Detail</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#EEF2ED;--paper-raised:#FFFFFF;--ink:#16211C;--ink-soft:#4B5A52;--line:#D7DED6;--pine:#2F6F5E;--pine-deep:#1F4A3E;--gold:#C4872E;--coral:#BE4F39;}
+  *{box-sizing:border-box;}
+  body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;margin:0;padding:20px;max-width:720px;margin:0 auto;}
+  h1{font-family:'Fraunces',serif;font-size:22px;}
+  h3{font-size:15px;}
+  .card{background:var(--paper-raised);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);gap:10px;flex-wrap:wrap;font-size:13px;}
+  .row:last-child{border-bottom:none;}
+  .btn{border:none;border-radius:8px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer;text-decoration:none;color:#fff;display:inline-block;}
+  .btn.pay{background:var(--pine);}
+  .btn.reject{background:var(--coral);}
+  .btn.credit{background:var(--gold);color:#231604;border:none;font-size:13px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;}
+  .revenue{font-family:'Space Mono',monospace;font-size:22px;color:var(--pine-deep);font-weight:700;}
+  input{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;}
+  small{color:var(--ink-soft);}
+  a.back{color:var(--pine);font-size:13px;text-decoration:none;}
+</style>
+</head>
+<body>
+  <a class="back" href="/admin/{{ secret }}">← Admin panel এ ফিরে যান</a>
+  <h1>{{ user.username and '@'+user.username or user.first_name }}</h1>
+  <small>Telegram ID: {{ user.telegram_id }}</small>
 
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div>
+      <small>Balance</small>
+      <div class="revenue">${{ "%.2f"|format(user.balance) }}</div>
+    </div>
+    <div>
+      <small>Referrals</small>
+      <div class="revenue" style="font-size:18px;">{{ referrals_count }}</div>
+    </div>
+    <div>
+      {% if user.banned %}
+        <span class="btn reject" style="cursor:default;">🚫 BANNED</span>
+        <a class="btn pay" href="/admin/{{ secret }}/user/{{ user.telegram_id }}/unban">Unban</a>
+      {% else %}
+        <span class="btn pay" style="cursor:default;">✅ Active</span>
+        <a class="btn reject" href="/admin/{{ secret }}/user/{{ user.telegram_id }}/ban">Ban</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Credit / remove balance</h3>
+    <form method="POST" action="/admin/{{ secret }}/credit" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <input type="hidden" name="telegram_id" value="{{ user.telegram_id }}">
+      <input type="number" step="0.01" name="amount" placeholder="Amount (USDT)" required>
+      <button class="btn credit" type="submit">Credit</button>
+    </form>
+    <form method="POST" action="/admin/{{ secret }}/debit" style="display:flex;gap:8px;flex-wrap:wrap;">
+      <input type="hidden" name="telegram_id" value="{{ user.telegram_id }}">
+      <input type="number" step="0.01" name="amount" placeholder="Amount (USDT)" required>
+      <button class="btn reject" type="submit">Remove</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Recent task submissions (worker)</h3>
+    {% if submissions|length == 0 %}<p><small>কোনো সাবমিশন নেই</small></p>{% endif %}
+    {% for s in submissions %}
+      <div class="row"><div>{{ s.title }}</div><div><small>{{ s.status }}</small></div></div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h3>Posted tasks (employer)</h3>
+    {% if tasks_posted|length == 0 %}<p><small>কোনো টাস্ক পোস্ট করেননি</small></p>{% endif %}
+    {% for t in tasks_posted %}
+      <div class="row"><div>{{ t.title }}</div><div><small>{{ t.filled_slots }}/{{ t.total_slots }}</small></div></div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h3>Withdrawal history</h3>
+    {% if withdrawals|length == 0 %}<p><small>কোনো উইথড্র নেই</small></p>{% endif %}
+    {% for w in withdrawals %}
+      <div class="row"><div>${{ "%.2f"|format(w.amount) }} via {{ w.method }}<br><small>{{ w.account_details }}</small></div><div><small>{{ w.status }}</small></div></div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h3>Deposit history</h3>
+    {% if deposits|length == 0 %}<p><small>কোনো ডিপোজিট নেই</small></p>{% endif %}
+    {% for d in deposits %}
+      <div class="row"><div>${{ "%.2f"|format(d.amount) }} via {{ d.method }}<br><small>Ref: {{ d.transaction_ref }}</small></div><div><small>{{ d.status }}</small></div></div>
+    {% endfor %}
+  </div>
+</body>
+</html>
