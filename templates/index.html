@@ -102,7 +102,7 @@
         <div id="deposit-info" style="margin:12px 0;"><div class="empty-note">Loading...</div></div>
         <div class="field-label">Method</div>
         <div class="method-row" id="deposit-methods">
-          <div class="method active" data-m="USDT">USDT (TRC20)</div>
+          <div class="method active" data-m="USDT">Binance</div>
           <div class="method" data-m="bKash">bKash</div>
           <div class="method" data-m="Nagad">Nagad</div>
           <div class="method" data-m="Rocket">Rocket</div>
@@ -122,7 +122,7 @@
         <div class="card-title">Request a withdrawal</div>
         <div class="field-label">Payout method</div>
         <div class="method-row" id="withdraw-methods">
-          <div class="method active" data-m="USDT">USDT (TRC20)</div>
+          <div class="method active" data-m="USDT">Binance</div>
           <div class="method" data-m="bKash">bKash</div>
           <div class="method" data-m="Nagad">Nagad</div>
           <div class="method" data-m="Rocket">Rocket</div>
@@ -420,7 +420,7 @@ async function loadDepositInfo(){
   try{
     const d = await apiFetch('/api/deposit-info');
     document.getElementById('deposit-info').innerHTML = `
-      <div class="link-row"><div class="link-text">USDT (TRC20): ${d.usdt}</div></div>
+      <div class="link-row"><div class="link-text">Binance: ${d.usdt}</div></div>
       <div class="link-row"><div class="link-text">bKash: ${d.bkash}</div></div>
       <div class="link-row"><div class="link-text">Nagad: ${d.nagad}</div></div>
       <div class="link-row"><div class="link-text">Rocket: ${d.rocket}</div></div>
