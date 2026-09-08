@@ -548,7 +548,7 @@ def api_withdraw():
     if amount > user["balance"]:
         return jsonify({"error": "ব্যালেন্স যথেষ্ট নেই"}), 400
     if not account_details:
-        return jsonify({"error": "আপনার পেমেন্ট নাম্বার/এড্রেস দিন"}), 400
+        return jsonify({"error": "আপনার পেমেন্ট নাম্বার দিন"}), 400
 
     db = get_db()
     db.execute("UPDATE users SET balance = balance - ? WHERE telegram_id=?", (amount, user["telegram_id"]))
