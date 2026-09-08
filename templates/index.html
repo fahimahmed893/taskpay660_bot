@@ -88,7 +88,14 @@
         <div>Min. withdraw<b id="wallet-min">2.00</b></div>
       </div>
     </div>
-    <div class="section">
+    <div class="section" style="padding-top:0;">
+      <div style="display:flex;gap:10px;">
+        <button class="submit-btn" id="wallet-tab-deposit" style="flex:1;background:var(--gold);" onclick="showWalletTab('deposit')">↓ Deposit</button>
+        <button class="submit-btn" id="wallet-tab-withdraw" style="flex:1;background:var(--paper-raised);color:var(--ink);border:1px solid var(--line);" onclick="showWalletTab('withdraw')">↑ Withdraw</button>
+      </div>
+    </div>
+
+    <div class="section" id="wallet-panel-deposit">
       <div class="card">
         <div class="card-title">Deposit / Add balance</div>
         <div class="field-hint">নিচের যেকোনো একটা ঠিকানায় টাকা পাঠান, তারপর Amount ও Transaction ID দিয়ে জমা দিন — এডমিন যাচাই করে ব্যালেন্স যোগ করে দিবেন।</div>
@@ -109,7 +116,7 @@
       </div>
     </div>
 
-    <div class="section">
+    <div class="section" id="wallet-panel-withdraw" style="display:none;">
       <div class="card">
         <div class="card-title">Request a withdrawal</div>
         <div class="field-label">Payout method</div>
@@ -118,6 +125,7 @@
           <div class="method" data-m="bKash">bKash</div>
           <div class="method" data-m="Nagad">Nagad</div>
         </div>
+        <div class="field"><div class="field-label">আপনার পেমেন্ট নাম্বার / ওয়ালেট এড্রেস</div><input type="text" id="withdraw-account" placeholder="bKash নাম্বার বা USDT এড্রেস"></div>
         <div class="field-label">Amount</div>
         <div class="amount-input">
           <input type="number" step="0.01" id="withdraw-amount" placeholder="0.00">
@@ -430,13 +438,32 @@ async function submitDeposit(){
   }catch(e){ toast(e.message); }
 }
 
+function showWalletTab(tab){
+  const depositPanel = document.getElementById('wallet-panel-deposit');
+  const withdrawPanel = document.getElementById('wallet-panel-withdraw');
+  const depositBtn = document.getElementById('wallet-tab-deposit');
+  const withdrawBtn = document.getElementById('wallet-tab-withdraw');
+  if(tab==='deposit'){
+    depositPanel.style.display='block'; withdrawPanel.style.display='none';
+    depositBtn.style.background='var(--gold)'; depositBtn.style.color='#231604'; depositBtn.style.border='none';
+    withdrawBtn.style.background='var(--paper-raised)'; withdrawBtn.style.color='var(--ink)'; withdrawBtn.style.border='1px solid var(--line)';
+  }else{
+    depositPanel.style.display='none'; withdrawPanel.style.display='block';
+    withdrawBtn.style.background='var(--gold)'; withdrawBtn.style.color='#231604'; withdrawBtn.style.border='none';
+    depositBtn.style.background='var(--paper-raised)'; depositBtn.style.color='var(--ink)'; depositBtn.style.border='1px solid var(--line)';
+  }
+}
+
 async function submitWithdraw(){
   const amount = parseFloat(document.getElementById('withdraw-amount').value);
+  const accountDetails = document.getElementById('withdraw-account').value.trim();
   if(!amount || amount<=0){ toast('সঠিক amount দিন'); return; }
+  if(!accountDetails){ toast('আপনার পেমেন্ট নাম্বার/এড্রেস দিন'); return; }
   try{
-    await apiFetch('/api/withdraw', {method:'POST', body: JSON.stringify({amount, method: withdrawMethod})});
+    await apiFetch('/api/withdraw', {method:'POST', body: JSON.stringify({amount, method: withdrawMethod, account_details: accountDetails})});
     toast('উইথড্র রিকোয়েস্ট পাঠানো হয়েছে ✅');
     document.getElementById('withdraw-amount').value='';
+    document.getElementById('withdraw-account').value='';
     loadWallet();
   }catch(e){ toast(e.message); }
 }
