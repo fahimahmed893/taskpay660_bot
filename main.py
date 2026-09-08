@@ -34,12 +34,14 @@ BOT_TOKEN = "8996627149:AAH0uejnG9e8_RJDRcTzsNN_9erLGEiqK6c"
 CHANNEL_USERNAME = "@task_pay_660"
 ADMIN_TELEGRAM_ID = 1725125622          # আপনার নিজের Telegram numeric ID (@userinfobot দিয়ে বের করুন)
 ADMIN_SECRET_PATH = "taskpay-admin-panel-fahim660"  # এডমিন প্যানেলের গোপন অংশ, url এ থাকবে
-WEBAPP_URL = "https://taskpay660-bot.onrender.com"     # Replit Run করার পর যে ওয়েব লিংক পাবেন সেটা এখানে বসাবেন
+WEBAPP_URL = "https://example.com"     # Replit Run করার পর যে ওয়েব লিংক পাবেন সেটা এখানে বসাবেন
 # ========================================================
 
 PLATFORM_MARGIN_PERCENT = 25   # employer rate থেকে worker rate কত % কম হবে (আপনি বদলাতে পারেন)
 REFERRAL_PERCENT = 5           # রেফারেল কমিশন %
 MIN_WITHDRAW = 2.0             # মিনিমাম উইথড্র (USDT)
+MIN_TASK_RATE = 0.012          # টাস্ক পোস্ট করার মিনিমাম rate (USDT)
+MIN_EMPLOYER_RATE = 0.012      # টাস্ক পোস্ট করার সময় প্রতি টাস্কে সর্বনিম্ন রেট
 
 # ডিপোজিটের জন্য আপনার পেমেন্ট তথ্য - এগুলো আপনার আসল নাম্বার/এড্রেস দিয়ে বদলান
 RECEIVE_USDT_ADDRESS = "আপনার USDT (TRC20) ওয়ালেট এড্রেস এখানে দিন"
@@ -77,6 +79,7 @@ def init_db():
         first_name TEXT,
         balance REAL DEFAULT 0,
         referred_by INTEGER,
+        banned INTEGER DEFAULT 0,
         created_at TEXT
     )""")
     c.execute("""CREATE TABLE IF NOT EXISTS tasks (
@@ -108,6 +111,7 @@ def init_db():
         user_id INTEGER,
         amount REAL,
         method TEXT,
+        account_details TEXT,
         status TEXT DEFAULT 'pending',
         created_at TEXT
     )""")
@@ -127,6 +131,25 @@ def init_db():
         status TEXT DEFAULT 'pending',
         created_at TEXT
     )""")
+    c.execute("""CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+    )""")
+    conn.commit()
+    conn.close()
+
+
+def get_setting(key, default=None):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    row = conn.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+    conn.close()
+    return row["value"] if row else default
+
+
+def set_setting(key, value):
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("INSERT INTO settings (key, value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (key, value))
     conn.commit()
     conn.close()
 
@@ -165,6 +188,8 @@ def get_authenticated_user():
     row = db.execute("SELECT * FROM users WHERE telegram_id=?", (telegram_id,)).fetchone()
     if not row:
         return None
+    if row["banned"]:
+        return None
     return dict(row), user_data
 
 
@@ -191,15 +216,68 @@ def admin_panel():
         "SELECT COALESCE(SUM(t.employer_rate - t.worker_rate),0) as rev FROM submissions s "
         "JOIN tasks t ON t.id=s.task_id WHERE s.status='approved'"
     ).fetchone()
-    users = db.execute("SELECT telegram_id, username, first_name, balance FROM users ORDER BY created_at DESC LIMIT 50").fetchall()
+    total_users = db.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
+    users = db.execute("SELECT telegram_id, username, first_name, balance, banned FROM users ORDER BY created_at DESC LIMIT 50").fetchall()
+    bot_enabled = get_setting("bot_enabled", "1") == "1"
     return render_template(
         "admin.html",
         withdrawals=withdrawals,
         deposits=deposits,
         revenue=round(revenue_row["rev"], 4),
         users=users,
+        total_users=total_users,
+        bot_enabled=bot_enabled,
         secret=ADMIN_SECRET_PATH,
     )
+
+
+@app.route(f"/admin/{ADMIN_SECRET_PATH}/bot/toggle")
+def admin_bot_toggle():
+    current = get_setting("bot_enabled", "1")
+    set_setting("bot_enabled", "0" if current == "1" else "1")
+    return admin_panel()
+
+
+@app.route(f"/admin/{ADMIN_SECRET_PATH}/user/<int:tid>")
+def admin_user_detail(tid):
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE telegram_id=?", (tid,)).fetchone()
+    if not user:
+        return f"User {tid} খুঁজে পাওয়া যায়নি। <a href='/admin/{ADMIN_SECRET_PATH}'>ফিরে যান</a>"
+    submissions = db.execute(
+        "SELECT s.*, t.title FROM submissions s JOIN tasks t ON t.id=s.task_id WHERE s.worker_id=? ORDER BY s.created_at DESC LIMIT 20",
+        (tid,),
+    ).fetchall()
+    tasks_posted = db.execute("SELECT * FROM tasks WHERE employer_id=? ORDER BY created_at DESC LIMIT 20", (tid,)).fetchall()
+    withdrawals = db.execute("SELECT * FROM withdrawals WHERE user_id=? ORDER BY created_at DESC LIMIT 20", (tid,)).fetchall()
+    deposits = db.execute("SELECT * FROM deposits WHERE user_id=? ORDER BY created_at DESC LIMIT 20", (tid,)).fetchall()
+    referrals_count = db.execute("SELECT COUNT(*) c FROM users WHERE referred_by=?", (tid,)).fetchone()["c"]
+    return render_template(
+        "admin_user.html",
+        user=user,
+        submissions=submissions,
+        tasks_posted=tasks_posted,
+        withdrawals=withdrawals,
+        deposits=deposits,
+        referrals_count=referrals_count,
+        secret=ADMIN_SECRET_PATH,
+    )
+
+
+@app.route(f"/admin/{ADMIN_SECRET_PATH}/user/<int:tid>/ban")
+def admin_ban_user(tid):
+    db = get_db()
+    db.execute("UPDATE users SET banned=1 WHERE telegram_id=?", (tid,))
+    db.commit()
+    return admin_user_detail(tid)
+
+
+@app.route(f"/admin/{ADMIN_SECRET_PATH}/user/<int:tid>/unban")
+def admin_unban_user(tid):
+    db = get_db()
+    db.execute("UPDATE users SET banned=0 WHERE telegram_id=?", (tid,))
+    db.commit()
+    return admin_user_detail(tid)
 
 
 @app.route(f"/admin/{ADMIN_SECRET_PATH}/withdraw/<int:wid>/<action>")
@@ -240,6 +318,16 @@ def admin_credit():
     return admin_panel()
 
 
+@app.route(f"/admin/{ADMIN_SECRET_PATH}/debit", methods=["POST"])
+def admin_debit():
+    telegram_id = int(request.form.get("telegram_id"))
+    amount = float(request.form.get("amount"))
+    db = get_db()
+    db.execute("UPDATE users SET balance = MAX(0, balance - ?) WHERE telegram_id=?", (amount, telegram_id))
+    db.commit()
+    return admin_panel()
+
+
 @app.route(f"/admin/{ADMIN_SECRET_PATH}/backup")
 def admin_backup():
     """পুরো ডাটাবেস ফাইল ডাউনলোড করার জন্য - নিয়মিত ব্যাকআপ নিতে ব্যবহার করুন"""
@@ -252,6 +340,9 @@ def admin_backup():
 # ---------------------------------------------------------
 @app.route("/api/init", methods=["POST"])
 def api_init():
+    if get_setting("bot_enabled", "1") == "0":
+        return jsonify({"error": "সাইটটি এই মুহূর্তে রক্ষণাবেক্ষণের জন্য বন্ধ আছে"}), 503
+
     body = request.get_json(force=True)
     init_data = body.get("initData", "")
     ref = body.get("ref")
@@ -266,6 +357,8 @@ def api_init():
 
     db = get_db()
     row = db.execute("SELECT * FROM users WHERE telegram_id=?", (telegram_id,)).fetchone()
+    if row and row["banned"]:
+        return jsonify({"error": "আপনার একাউন্ট ব্যান করা হয়েছে"}), 403
     if not row:
         referred_by = None
         if ref:
@@ -447,17 +540,20 @@ def api_withdraw():
     body = request.get_json(force=True)
     amount = float(body.get("amount", 0))
     method = body.get("method", "USDT")
+    account_details = body.get("account_details", "").strip()
 
     if amount < MIN_WITHDRAW:
         return jsonify({"error": f"মিনিমাম উইথড্র {MIN_WITHDRAW} USDT"}), 400
     if amount > user["balance"]:
         return jsonify({"error": "ব্যালেন্স যথেষ্ট নেই"}), 400
+    if not account_details:
+        return jsonify({"error": "আপনার পেমেন্ট নাম্বার/এড্রেস দিন"}), 400
 
     db = get_db()
     db.execute("UPDATE users SET balance = balance - ? WHERE telegram_id=?", (amount, user["telegram_id"]))
     db.execute(
-        "INSERT INTO withdrawals (user_id, amount, method, status, created_at) VALUES (?,?,?,?,?)",
-        (user["telegram_id"], amount, method, "pending", now()),
+        "INSERT INTO withdrawals (user_id, amount, method, account_details, status, created_at) VALUES (?,?,?,?,?,?)",
+        (user["telegram_id"], amount, method, account_details, "pending", now()),
     )
     db.commit()
     return jsonify({"ok": True})
@@ -561,6 +657,8 @@ def api_post_task():
 
     if not title or employer_rate <= 0 or total_slots <= 0:
         return jsonify({"error": "সব ঘর সঠিকভাবে পূরণ করুন"}), 400
+    if employer_rate < MIN_EMPLOYER_RATE:
+        return jsonify({"error": f"প্রতি টাস্কের সর্বনিম্ন রেট ${MIN_EMPLOYER_RATE}"}), 400
 
     worker_rate = round(employer_rate * (1 - PLATFORM_MARGIN_PERCENT / 100), 4)
     total_cost = round(employer_rate * total_slots, 4)
@@ -676,6 +774,19 @@ def open_app_keyboard(ref=None):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+
+    if get_setting("bot_enabled", "1") == "0":
+        await update.message.reply_text("⚠️ সাইটটি এই মুহূর্তে রক্ষণাবেক্ষণের জন্য সাময়িকভাবে বন্ধ আছে। পরে আবার চেষ্টা করুন।")
+        return
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    urow = conn.execute("SELECT banned FROM users WHERE telegram_id=?", (user_id,)).fetchone()
+    conn.close()
+    if urow and urow["banned"]:
+        await update.message.reply_text("🚫 আপনার একাউন্ট ব্যান করা হয়েছে। বিস্তারিত জানতে এডমিনের সাথে যোগাযোগ করুন।")
+        return
+
     ref = None
     if context.args and context.args[0].startswith("ref_"):
         try:
