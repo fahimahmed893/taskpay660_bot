@@ -44,9 +44,10 @@ MIN_TASK_RATE = 0.012          # টাস্ক পোস্ট করার �
 MIN_EMPLOYER_RATE = 0.012      # টাস্ক পোস্ট করার সময় প্রতি টাস্কে সর্বনিম্ন রেট
 
 # ডিপোজিটের জন্য আপনার পেমেন্ট তথ্য - এগুলো আপনার আসল নাম্বার/এড্রেস দিয়ে বদলান
-RECEIVE_USDT_ADDRESS = "Binance:- 46130810 ✅"
-RECEIVE_BKASH_NUMBER = "Bkash:- 01827585660 (Personal)✅"
-RECEIVE_NAGAD_NUMBER = "Bkash:- 01827585660 (Personal)✅"
+RECEIVE_Binance_UID = " 46130810 ✅"
+RECEIVE_BKASH_NUMBER = " 01827585660 (Personal)✅"
+RECEIVE_NAGAD_NUMBER = " 01827585660 (Personal)✅"
+RECEIVE_Rocket_NUMBER = " 01827585660 (Personal)✅"
 
 DB_PATH = "taskledger.db"
 
