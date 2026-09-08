@@ -127,7 +127,7 @@
           <div class="method" data-m="Nagad">Nagad</div>
           <div class="method" data-m="Rocket">Rocket</div>
         </div>
-        <div class="field"><div class="field-label">আপনার পেমেন্ট নাম্বার / ওয়ালেট এড্রেস</div><input type="text" id="withdraw-account" placeholder="bKash নাম্বার বা USDT এড্রেস"></div>
+        <div class="field"><div class="field-label">আপনি কিসের মাধ্যমে পেমেন্ট নিবেন সেই নাম্বার টি নিচে লিখুন</div><input type="text" id="withdraw-account" placeholder="আপনার পেমেন্ট নাম্বার দিন"></div>
         <div class="field-label">Amount</div>
         <div class="amount-input">
           <input type="number" step="0.01" id="withdraw-amount" placeholder="0.00">
@@ -461,7 +461,7 @@ async function submitWithdraw(){
   const amount = parseFloat(document.getElementById('withdraw-amount').value);
   const accountDetails = document.getElementById('withdraw-account').value.trim();
   if(!amount || amount<=0){ toast('সঠিক amount দিন'); return; }
-  if(!accountDetails){ toast('আপনার পেমেন্ট নাম্বার/এড্রেস দিন'); return; }
+  if(!accountDetails){ toast('আপনি যেই নাম্বারে পেমেন্ট নিবেন সেই নাম্বারটি লিখুন'); return; }
   try{
     await apiFetch('/api/withdraw', {method:'POST', body: JSON.stringify({amount, method: withdrawMethod, account_details: accountDetails})});
     toast('উইথড্র রিকোয়েস্ট পাঠানো হয়েছে ✅');
