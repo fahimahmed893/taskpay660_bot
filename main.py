@@ -566,9 +566,10 @@ def api_deposit_info():
     if not auth:
         return jsonify({"error": "unauthorized"}), 401
     return jsonify({
-        "usdt": RECEIVE_USDT_ADDRESS,
+        "binance": RECEIVE_Binance_UID,
         "bkash": RECEIVE_BKASH_NUMBER,
         "nagad": RECEIVE_NAGAD_NUMBER,
+        "rocket": RECEIVE_Rocket_NUMBER,
     })
 
 
